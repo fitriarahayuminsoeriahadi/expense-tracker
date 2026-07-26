@@ -63,9 +63,10 @@ st.markdown(
         border-radius: 16px;
         margin-bottom: 28px;
         box-shadow: 0 8px 24px rgba(62, 122, 70, 0.3);
+        text-align: center;
     }
-    .hero h1 { color: #FCFBF3 !important; margin: 0; font-size: 28px; font-weight: 700; }
-    .hero p { color: rgba(252,251,243,0.9) !important; margin: 4px 0 0 0; font-size: 14px; }
+    .hero h1 { color: #FFFFFF !important; margin: 0; font-size: 28px; font-weight: 700; }
+    .hero p { color: #FFFFFF !important; margin: 4px 0 0 0; font-size: 14px; }
 
     /* Metric cards */
     div[data-testid="stMetric"] {
@@ -138,7 +139,7 @@ st.markdown(
         color: #262622;
     }
     table.custom-table th {
-        color: #6B7A63;
+        color: #000000;
         font-weight: 600;
         font-size: 12px;
         text-transform: uppercase;
@@ -370,35 +371,62 @@ with st.sidebar:
             st.rerun()
 
 # ---------------------------------------------------------------------------
-# RINGKASAN
+# AMBIL DATA TRANSAKSI (dipakai bareng buat ringkasan & tabel)
 # ---------------------------------------------------------------------------
-ringkasan = ambil_ringkasan(user_id)
+rows = ambil_semua_transaksi(user_id)
+
+if rows:
+    df = pd.DataFrame([dict(r) for r in rows])
+    df["tanggal_dt"] = pd.to_datetime(df["tanggal"])
+    df["bulan_key"] = df["tanggal_dt"].dt.strftime("%Y-%m")
+    bulan_keys_tersedia = sorted(df["bulan_key"].unique(), reverse=True)
+else:
+    df = pd.DataFrame()
+    bulan_keys_tersedia = []
+
+
+def _label_bulan(bkey: str) -> str:
+    if bkey == "semua":
+        return "Semua Bulan"
+    tahun, bulan = bkey.split("-")
+    return f"{BULAN_ID[int(bulan)]} {tahun}"
+
+
+# ---------------------------------------------------------------------------
+# RINGKASAN (bisa difilter per bulan)
+# ---------------------------------------------------------------------------
+opsi_bulan = ["semua"] + bulan_keys_tersedia
+bulan_dipilih = st.selectbox(
+    "📅 Tampilkan ringkasan untuk",
+    options=opsi_bulan,
+    format_func=_label_bulan,
+)
+
+if bulan_dipilih == "semua" or df.empty:
+    df_ringkasan = df
+else:
+    df_ringkasan = df[df["bulan_key"] == bulan_dipilih]
+
+total_masuk = df_ringkasan.loc[df_ringkasan["tipe"] == "Masuk", "jumlah"].sum() if not df_ringkasan.empty else 0
+total_keluar = df_ringkasan.loc[df_ringkasan["tipe"] == "Keluar", "jumlah"].sum() if not df_ringkasan.empty else 0
 
 col1, col2, col3 = st.columns(3)
-col1.metric("💵 Total Pemasukan", format_rupiah(ringkasan["total_masuk"]))
-col2.metric("💸 Total Pengeluaran", format_rupiah(ringkasan["total_keluar"]))
-col3.metric("🏦 Saldo", format_rupiah(ringkasan["saldo"]))
+col1.metric("💵 Total Pemasukan", format_rupiah(total_masuk))
+col2.metric("💸 Total Pengeluaran", format_rupiah(total_keluar))
+col3.metric("🏦 Saldo", format_rupiah(total_masuk - total_keluar))
 
 st.write("")
 
 # ---------------------------------------------------------------------------
-# TABEL & GRAFIK
+# TABEL & GRAFIK (tetap tampilkan semua bulan, dikelompokkan per bulan)
 # ---------------------------------------------------------------------------
-rows = ambil_semua_transaksi(user_id)
-
 if not rows:
     st.info("Belum ada transaksi. Yuk tambahkan lewat form di sidebar. 👈")
 else:
-    df = pd.DataFrame([dict(r) for r in rows])
-    df["tanggal_dt"] = pd.to_datetime(df["tanggal"])
-    df["bulan_key"] = df["tanggal_dt"].dt.strftime("%Y-%m")
-
     tab1, tab2 = st.tabs(["📋 Daftar Transaksi", "📊 Grafik per Kategori"])
 
     with tab1:
-        bulan_keys = sorted(df["bulan_key"].unique(), reverse=True)
-
-        for i, bkey in enumerate(bulan_keys):
+        for i, bkey in enumerate(bulan_keys_tersedia):
             group = df[df["bulan_key"] == bkey].sort_values("tanggal_dt", ascending=False)
             contoh_tanggal = group["tanggal_dt"].iloc[0]
             label_bulan = f"{BULAN_ID[contoh_tanggal.month]} {contoh_tanggal.year}"
@@ -413,6 +441,7 @@ else:
                     unsafe_allow_html=True,
                 )
                 st.markdown(render_tabel_bulan(group), unsafe_allow_html=True)
+
 
         st.write("")
         st.subheader("🗑️ Hapus Transaksi")
