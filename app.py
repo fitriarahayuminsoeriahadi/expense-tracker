@@ -45,41 +45,50 @@ st.markdown(
         font-family: 'Poppins', sans-serif;
     }
 
-    .main { background-color: #0e1117; }
+    /* ============================================================
+       TEMA: krem/ivory + hijau + charcoal + coral pink
+       ============================================================ */
+    .stApp { background-color: #F3EEDC; }
+    .main { background-color: #F3EEDC; }
+
+    h1, h2, h3, h4, h5, h6, p, label, span, div {
+        color: #262622;
+    }
 
     /* Header banner */
     .hero {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, #6FBE68 0%, #3E7A46 100%);
         padding: 28px 32px;
         border-radius: 16px;
         margin-bottom: 28px;
-        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+        box-shadow: 0 8px 24px rgba(62, 122, 70, 0.3);
     }
-    .hero h1 { color: white; margin: 0; font-size: 28px; font-weight: 700; }
-    .hero p { color: rgba(255,255,255,0.85); margin: 4px 0 0 0; font-size: 14px; }
+    .hero h1 { color: #FCFBF3 !important; margin: 0; font-size: 28px; font-weight: 700; }
+    .hero p { color: rgba(252,251,243,0.9) !important; margin: 4px 0 0 0; font-size: 14px; }
 
     /* Metric cards */
     div[data-testid="stMetric"] {
-        background-color: #1a1f2b;
-        border: 1px solid #2a3040;
+        background-color: #FCFBF3;
+        border: 1px solid #D9D2B8;
         border-radius: 14px;
         padding: 18px 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 8px rgba(38, 38, 34, 0.08);
     }
-    div[data-testid="stMetricLabel"] { font-weight: 500; color: #9ca3af !important; }
-    div[data-testid="stMetricValue"] { font-weight: 700; }
+    div[data-testid="stMetricLabel"] { font-weight: 500; color: #6B7A63 !important; }
+    div[data-testid="stMetricValue"] { font-weight: 700; color: #262622 !important; }
 
     /* Sidebar */
     section[data-testid="stSidebar"] {
-        background-color: #12161f;
-        border-right: 1px solid #2a3040;
+        background-color: #E9E2C6;
+        border-right: 1px solid #D9D2B8;
     }
-    section[data-testid="stSidebar"] h2 { color: #10b981; font-weight: 600; }
+    section[data-testid="stSidebar"] h2 { color: #3E7A46 !important; font-weight: 600; }
+    section[data-testid="stSidebar"] label { color: #262622 !important; }
 
     /* Buttons */
     div.stButton > button {
-        background-color: #10b981;
-        color: white;
+        background-color: #3E7A46;
+        color: #FCFBF3;
         border-radius: 10px;
         border: none;
         font-weight: 600;
@@ -87,14 +96,29 @@ st.markdown(
         transition: background-color 0.2s ease;
         width: 100%;
     }
-    div.stButton > button:hover { background-color: #059669; color: white; }
+    div.stButton > button:hover { background-color: #2F5F37; color: #FCFBF3; }
+    div.stButton > button p { color: #FCFBF3 !important; }
 
     button[data-baseweb="tab"] { font-weight: 600; }
+    button[data-baseweb="tab"] p { color: #262622 !important; }
+
+    /* Input & selectbox fields */
+    div[data-baseweb="input"], div[data-baseweb="select"] > div {
+        background-color: #FCFBF3 !important;
+        border-color: #D9D2B8 !important;
+    }
+
+    /* Expander (kotak per bulan) */
+    div[data-testid="stExpander"] {
+        background-color: #FCFBF3;
+        border: 1px solid #D9D2B8;
+        border-radius: 12px;
+    }
 
     /* Custom transaction table, centered + per-month */
     .table-wrap {
         overflow-x: auto;
-        border: 1px solid #2a3040;
+        border: 1px solid #D9D2B8;
         border-radius: 12px;
         margin-bottom: 6px;
     }
@@ -102,28 +126,29 @@ st.markdown(
         width: 100%;
         min-width: 480px;
         border-collapse: collapse;
-        background-color: #1a1f2b;
+        background-color: #FCFBF3;
     }
     table.custom-table th, table.custom-table td {
         text-align: center;
         padding: 10px 14px;
-        border-bottom: 1px solid #2a3040;
+        border-bottom: 1px solid #E9E2C6;
         white-space: nowrap;
         font-size: 14px;
+        color: #262622;
     }
     table.custom-table th {
-        color: #9ca3af;
+        color: #6B7A63;
         font-weight: 600;
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.03em;
-        background-color: #161a24;
+        background-color: #E9E2C6;
     }
     table.custom-table tr:last-child td { border-bottom: none; }
-    table.custom-table tr:hover td { background-color: #20263380; }
-    .badge-masuk { color: #34d399; font-weight: 600; }
-    .badge-keluar { color: #f87171; font-weight: 600; }
-    .bulan-summary { color: #9ca3af; font-size: 13px; margin: -4px 0 10px 2px; }
+    table.custom-table tr:hover td { background-color: #EFEAD5; }
+    .badge-masuk { color: #3E7A46; font-weight: 600; }
+    .badge-keluar { color: #E0526B; font-weight: 600; }
+    .bulan-summary { color: #6B7A63; font-size: 13px; margin: -4px 0 10px 2px; }
 
     /* Mobile tweaks */
     @media (max-width: 640px) {
