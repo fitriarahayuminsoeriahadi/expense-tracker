@@ -250,7 +250,7 @@ if st.session_state.user_id is None:
     st.markdown(
         """
         <div class="hero">
-            <h1>💰 Pencatat Keuangan Pribadi</h1>
+            <h1>Finance Note</h1>
             <p>Login atau daftar dulu buat mulai catat transaksimu.</p>
         </div>
         """,
@@ -309,7 +309,7 @@ with hero_col:
     st.markdown(
         f"""
         <div class="hero">
-            <h1>💰 Pencatat Keuangan Pribadi</h1>
+            <h1>Finance Note</h1>
             <p>Halo, {st.session_state.username}! Catat pemasukan & pengeluaranmu, pantau saldo secara real-time.</p>
         </div>
         """,
