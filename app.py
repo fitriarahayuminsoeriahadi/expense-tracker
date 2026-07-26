@@ -5,6 +5,8 @@ Jalankan dengan: python -m streamlit run app.py
 """
 
 import re
+import os
+import base64
 from datetime import date
 
 import pandas as pd
@@ -48,7 +50,6 @@ st.markdown(
     /* ============================================================
        TEMA: krem/ivory + hijau + charcoal + coral pink
        ============================================================ */
-    .stApp { background-color: #F3EEDC; }
     .main { background-color: #F3EEDC; }
 
     h1, h2, h3, h4, h5, h6, p, label, span, div {
@@ -164,6 +165,31 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+
+def _get_base64_gambar(nama_file: str) -> str | None:
+    """Baca file gambar di folder assets/ dan encode jadi base64 buat CSS background."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", nama_file)
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+_bg_base64 = _get_base64_gambar("background.jpg")
+if _bg_base64:
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background:
+                linear-gradient(rgba(243, 238, 220, 0.55), rgba(243, 238, 220, 0.55)),
+                url("data:image/jpeg;base64,{_bg_base64}") center center / cover no-repeat fixed !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def format_rupiah(angka: float) -> str:
