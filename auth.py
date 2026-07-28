@@ -5,6 +5,7 @@ Pakai hashlib PBKDF2 (built-in Python, nggak perlu install library tambahan).
 """
 
 import hashlib
+import hmac
 import os
 import binascii
 
@@ -21,4 +22,4 @@ def verify_password(password: str, hash_hex: str, salt_hex: str) -> bool:
     """Cek apakah password yang dimasukkan cocok dengan hash yang tersimpan."""
     salt = binascii.unhexlify(salt_hex)
     new_hash, _ = hash_password(password, salt)
-    return new_hash == hash_hex
+    return hmac.compare_digest(new_hash, hash_hex)

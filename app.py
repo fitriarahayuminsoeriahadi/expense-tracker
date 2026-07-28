@@ -6,6 +6,7 @@ Jalankan dengan: python -m streamlit run app.py
 
 import re
 import os
+import html
 import base64
 from datetime import date
 
@@ -117,6 +118,16 @@ st.markdown(
         border-radius: 12px;
     }
 
+    /* Bordered container (misal kotak "Hapus Transaksi") */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #FCFBF3;
+        border-radius: 12px;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] > div {
+        border-color: #D9D2B8 !important;
+        border-radius: 12px !important;
+    }
+
     /* Custom transaction table, centered + per-month */
     .table-wrap {
         overflow-x: auto;
@@ -194,8 +205,10 @@ if _bg_base64:
 
 
 def format_rupiah(angka: float) -> str:
-    """Ubah angka jadi format 'Rp 1.234.567'."""
-    return "Rp " + f"{int(angka):,}".replace(",", ".")
+    """Ubah angka jadi format 'Rp 1.234.567' (minus di depan 'Rp' kalau negatif)."""
+    angka = int(angka)
+    tanda = "-" if angka < 0 else ""
+    return f"{tanda}Rp " + f"{abs(angka):,}".replace(",", ".")
 
 
 def reformat_input_jumlah():
@@ -215,12 +228,13 @@ def render_tabel_bulan(group: pd.DataFrame) -> str:
     sel_baris = []
     for row in group.itertuples():
         badge_class = "badge-masuk" if row.tipe == "Masuk" else "badge-keluar"
-        catatan = row.catatan if row.catatan else "-"
+        catatan = html.escape(row.catatan) if row.catatan else "-"
+        kategori = html.escape(row.kategori)
         sel_baris.append(
             "<tr>"
             f"<td>{row.tanggal_dt.strftime('%d %b %Y')}</td>"
             f"<td><span class='{badge_class}'>{row.tipe}</span></td>"
-            f"<td>{row.kategori}</td>"
+            f"<td>{kategori}</td>"
             f"<td>{format_rupiah(row.jumlah)}</td>"
             f"<td>{catatan}</td>"
             "</tr>"
@@ -285,6 +299,8 @@ if st.session_state.user_id is None:
                 username_clean = username_d.strip()
                 if not username_clean or not password_d:
                     st.warning("Username dan password wajib diisi.")
+                elif not re.fullmatch(r"[A-Za-z0-9_.-]{3,32}", username_clean):
+                    st.warning("Username 3-32 karakter, hanya huruf/angka/_/./- (tanpa spasi).")
                 elif password_d != password_d2:
                     st.warning("Password dan ulangi password tidak sama.")
                 elif len(password_d) < 6:
@@ -310,7 +326,7 @@ with hero_col:
         f"""
         <div class="hero">
             <h1>Finance Note</h1>
-            <p>Halo, {st.session_state.username}! Catat pemasukan & pengeluaranmu, pantau saldo secara real-time.</p>
+            <p>Halo, {html.escape(st.session_state.username)}! Catat pemasukan & pengeluaranmu, pantau saldo secara real-time.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -410,10 +426,13 @@ else:
 total_masuk = df_ringkasan.loc[df_ringkasan["tipe"] == "Masuk", "jumlah"].sum() if not df_ringkasan.empty else 0
 total_keluar = df_ringkasan.loc[df_ringkasan["tipe"] == "Keluar", "jumlah"].sum() if not df_ringkasan.empty else 0
 
+saldo = total_masuk - total_keluar
+saldo_emoji = "🟢" if saldo >= 0 else "🔴"
+
 col1, col2, col3 = st.columns(3)
 col1.metric("💵 Total Pemasukan", format_rupiah(total_masuk))
 col2.metric("💸 Total Pengeluaran", format_rupiah(total_keluar))
-col3.metric("🏦 Saldo", format_rupiah(total_masuk - total_keluar))
+col3.metric(f"{saldo_emoji} Saldo", format_rupiah(saldo))
 
 st.write("")
 
@@ -444,20 +463,25 @@ else:
 
 
         st.write("")
-        st.subheader("🗑️ Hapus Transaksi")
-        label_map = {
-            row["id"]: f"#{row['id']} — {row['tanggal']} — {row['kategori']} — {format_rupiah(row['jumlah'])}"
-            for row in df.to_dict("records")
-        }
-        id_hapus = st.selectbox(
-            "Pilih transaksi yang mau dihapus",
-            options=list(label_map.keys()),
-            format_func=lambda x: label_map[x],
-        )
-        if st.button("Hapus Transaksi Terpilih"):
-            hapus_transaksi(user_id, int(id_hapus))
-            st.success(f"Transaksi #{id_hapus} dihapus.")
-            st.rerun()
+        with st.container(border=True):
+            st.subheader("🗑️ Hapus Transaksi")
+            label_map = {
+                row["id"]: f"#{row['id']} — {row['tanggal']} — {row['kategori']} — {format_rupiah(row['jumlah'])}"
+                for row in df.to_dict("records")
+            }
+            col_pilih, col_tombol = st.columns([4, 1])
+            with col_pilih:
+                id_hapus = st.selectbox(
+                    "Pilih transaksi yang mau dihapus",
+                    options=list(label_map.keys()),
+                    format_func=lambda x: label_map[x],
+                    label_visibility="collapsed",
+                )
+            with col_tombol:
+                if st.button("Hapus", use_container_width=True):
+                    hapus_transaksi(user_id, int(id_hapus))
+                    st.success(f"Transaksi #{id_hapus} dihapus.")
+                    st.rerun()
 
     with tab2:
         df_keluar = df[df["tipe"] == "Keluar"]
@@ -465,5 +489,11 @@ else:
             st.info("Belum ada data pengeluaran untuk ditampilkan.")
         else:
             rekap_kategori = df_keluar.groupby("kategori")["jumlah"].sum().reset_index()
-            rekap_kategori = rekap_kategori.sort_values("jumlah", ascending=False)
-            st.bar_chart(rekap_kategori.set_index("kategori"), color="#10b981")
+            rekap_kategori = rekap_kategori.sort_values("jumlah", ascending=True)
+            st.caption(f"Total pengeluaran: {format_rupiah(rekap_kategori['jumlah'].sum())}")
+            st.bar_chart(
+                rekap_kategori.set_index("kategori"),
+                color="#3E7A46",
+                horizontal=True,
+                height=max(220, 60 * len(rekap_kategori)),
+            )

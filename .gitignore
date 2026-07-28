@@ -1,0 +1,17 @@
+# Secrets
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Local/legacy database (app uses hosted Postgres, not sqlite)
+*.db
+
+# OS / editor
+.DS_Store
+.vscode/
